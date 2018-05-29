@@ -149,5 +149,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     ptt = ptt_scraper()
     ptt.scraper(board=args.b, start=args.i[0], end=args.i[-1], sleep_time=args.t)
-    print('All mission is complete!')
+    print('Mission completed!')
     
