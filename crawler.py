@@ -24,15 +24,21 @@ class ptt_scraper():
 
     def scraper(self, board="Gossiping", start=38900, end=38900, sleep_time = 0.5):
         scraper_range = range(start, end + 1)
-
+        page_count = start
+        res = []
         for page in self._pages(board, int(start), int(end)):
-            res = []
             print('parse page url:', page)
-            for article in self._articles(page):
-                #print('parse article url:', article)
-                res.append(self._parse_article(article))
-                sleep(sleep_time)
-            self._output(board + str(start) + "-" + str(end), res)
+            try:
+                for article in self._articles(page):
+                    #print('parse article url:', article)
+                    res.append(self._parse_article(article))
+                    page_count += 1
+                    sleep(sleep_time)
+            except Exception as e:
+                print('*** 在分析第{0}頁的時候發生錯誤 ***'.format(page_count))
+                print(e)
+            finally:
+                self._output(board + str(start) + "-" + str(end), res)
             
         #return res
 
