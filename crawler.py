@@ -28,7 +28,6 @@ class ptt_scraper():
         res = []
         for page in self._pages(board, int(start), int(end)):
             print('parse page url:', page)
-            page_count += 1
             try:
                 for article in self._articles(page):
                     #print('parse article url:', article)
@@ -39,6 +38,7 @@ class ptt_scraper():
                 print(e)
             finally:
                 self._output(board + str(start) + "-" + str(end), res)
+                page_count += 1
             
         #return res
 
