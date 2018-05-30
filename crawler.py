@@ -28,11 +28,11 @@ class ptt_scraper():
         res = []
         for page in self._pages(board, int(start), int(end)):
             print('parse page url:', page)
+            page_count += 1
             try:
                 for article in self._articles(page):
                     #print('parse article url:', article)
                     res.append(self._parse_article(article))
-                    page_count += 1
                     sleep(sleep_time)
             except Exception as e:
                 print('*** 在分析第{0}頁的時候發生錯誤 ***'.format(page_count))
