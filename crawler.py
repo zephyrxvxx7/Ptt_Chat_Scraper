@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from bs4.element import NavigableString
 from six import u
 import re
+import logging
 
 class ptt_scraper():
     main_url = "https://www.ptt.cc/bbs/"
@@ -21,22 +22,32 @@ class ptt_scraper():
         self.session.post("https://www.ptt.cc/ask/over18",
                           verify=False,
                           data=self.over18_payload)
+        logging.basicConfig(level=logging.INFO)
 
     def scraper(self, board="Gossiping", start=38900, end=38900, sleep_time = 0.5):
-        scraper_range = range(start, end + 1)
         page_count = start
         res = []
-        for page in self._pages(board, int(start), int(end)):
-            print('parse page url:', page)
-            try:
+        try:
+            for page in self._pages(board, int(start), int(end)):
+                logging.info('parse page url: ' + str(page))
+            
                 for article in self._articles(page):
                     #print('parse article url:', article)
                     res.append(self._parse_article(article))
                     sleep(sleep_time)
-            except Exception as e:
-                print('*** 在分析第{0}頁的時候發生錯誤 ***'.format(page_count))
-                print(e)
-            finally:
+                self._output(board + str(start) + "-" + str(end), res)
+                page_count += 1
+        except Exception as e:
+            logging.warning('在分析{0}頁時發生錯誤, 嘗試繼續執行'.format(page_count))
+            logging.warning(e)
+
+            for page in self._pages(board, int(page_count), int(end)):
+                logging.info('parse page url: ' + str(page))
+
+                for article in self._articles(page):
+                    #print('parse article url:', article)
+                    res.append(self._parse_article(article))
+                    sleep(sleep_time)
                 self._output(board + str(start) + "-" + str(end), res)
                 page_count += 1
             
@@ -131,7 +142,7 @@ class ptt_scraper():
         return article
     
     def _output(self, filename, data):
-        with open(filename + ".json", mode='w', encoding='utf-8') as op:
+        with open(filename + ".json", mode = 'w', encoding='utf-8') as op:
             op.write(json.dumps(data, indent=4, ensure_ascii=False))
         
     def _get_html(self, object):
