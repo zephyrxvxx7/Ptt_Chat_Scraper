@@ -26,32 +26,30 @@ class ptt_scraper():
 
     def scraper(self, board="Gossiping", start=38900, end=38900, sleep_time = 0.5):
         page_count = start
-        res = []
-        try:
-            for page in self._pages(board, int(start), int(end)):
-                logging.info('parse page url: ' + str(page))
+        filename = board + str(start) + "-" + str(end)
+
+        self._output(filename, 'w', '[')
+        for page in self._pages(board, int(start), int(end)):
             
+            logging.info('parse page url: ' + str(page))
+
+            try:
                 for article in self._articles(page):
                     #print('parse article url:', article)
-                    res.append(self._parse_article(article))
                     sleep(sleep_time)
-                self._output(board + str(start) + "-" + str(end), res)
-                page_count += 1
-        except Exception as e:
-            logging.warning('在分析{0}頁時發生錯誤, 嘗試繼續執行'.format(page_count))
-            logging.warning(e)
-
-            for page in self._pages(board, int(page_count), int(end)):
-                logging.info('parse page url: ' + str(page))
-
-                for article in self._articles(page):
-                    #print('parse article url:', article)
-                    res.append(self._parse_article(article))
-                    sleep(sleep_time)
-                self._output(board + str(start) + "-" + str(end), res)
-                page_count += 1
+                self._json_output(filename, 'a', self._parse_article(article))
+            except Exception as e:
+                logging.error('在分析{0}頁時發生錯誤, 嘗試繼續執行'.format(page_count))
+                logging.error(e)
             
-        #return res
+            page_count += 1
+        
+        with open(filename + ".json", mode= 'rb+') as op:
+            op.seek(-1, 2)
+            op.truncate()
+        
+        self._output(filename, 'a', ']')
+            
 
     def _pages(self, board, start, end):
         for page_range in range(start, end + 1):
@@ -141,9 +139,14 @@ class ptt_scraper():
 
         return article
     
-    def _output(self, filename, data):
-        with open(filename + ".json", mode = 'w', encoding='utf-8') as op:
+    def _output(self, filename, mode, data):
+        with open(filename + ".json", mode=mode, encoding='utf-8') as op:
+            op.write(data)
+    
+    def _json_output(self, filename, mode, data):
+        with open(filename + ".json", mode = mode, encoding='utf-8') as op:
             op.write(json.dumps(data, indent=4, ensure_ascii=False))
+            op.write(',')
         
     def _get_html(self, object):
         return self.session.get(object).text
