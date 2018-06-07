@@ -36,8 +36,8 @@ class ptt_scraper():
             try:
                 for article in self._articles(page):
                     #print('parse article url:', article)
+                    self._json_output(filename, 'a', self._parse_article(article))
                     sleep(sleep_time)
-                self._json_output(filename, 'a', self._parse_article(article))
             except Exception as e:
                 logging.error('在分析{0}頁時發生錯誤, 嘗試繼續執行'.format(page_count))
                 logging.error(e)
@@ -84,10 +84,20 @@ class ptt_scraper():
             pushes = soup.select(".push")
             for push in main_content.find_all('div', class_='push'):
                 push.extract()
+            
             # 移除 '※ 發信站:' (starts with u'\u203b'), '◆ From:' (starts with u'\u25c6'), 空行及多餘空白
             # 保留英數字, 中文及中文標點, 網址, 部分特殊符號
             filtered = [v for v in main_content.stripped_strings if v[0]
-                        not in [u'※', u'◆'] and v[:2] not in [u'--']]
+                        not in [u'※', u'◆']]
+            
+            #去掉'--'後續的字串
+            counter = 0
+            for filtere in filtered:
+                if filtere[:2] == u'--':
+	                break
+                counter += 1
+            filtered = filtered[:counter]
+            
             expr = re.compile(
                 u(r'[^\u4e00-\u9fa5\u3002\uff1b\uff0c\uff1a\u201c\u201d\uff08\uff09\u3001\uff1f\u300a\u300b\s\w:/-_.?~%()]'))
             for i in range(len(filtered)):
@@ -114,7 +124,7 @@ class ptt_scraper():
 
                     response_dic = {}
                     response_dic["Content"] = response_struct.select(
-                        ".push-content")[0].contents[0][1:]
+                        ".push-content")[0].contents[0][2:]
                     response_dic["Vote"] = response_struct.select(
                         ".push-tag")[0].contents[0][0]
                     response_dic["User"] = response_struct.select(
