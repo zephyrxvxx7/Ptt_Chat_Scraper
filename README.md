@@ -7,6 +7,7 @@ Requirements
     json
     bs4
     six
+    lxml
 
 How to use?
 --

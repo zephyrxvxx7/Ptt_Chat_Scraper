@@ -124,7 +124,8 @@ class ptt_scraper():
 
                     response_dic = {}
                     response_dic["Content"] = response_struct.select(
-                        ".push-content")[0].contents[0][2:]
+                        ".push-content")[0].contents[0][1:]
+                    print(response_dic['Content'])
                     response_dic["Vote"] = response_struct.select(
                         ".push-tag")[0].contents[0][0]
                     response_dic["User"] = response_struct.select(
