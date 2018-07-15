@@ -19,6 +19,8 @@ class ptt_scraper():
     def __init__(self):
         self.session = requests.session()
         requests.packages.urllib3.disable_warnings()
+
+        # 載入cookie以達到點選'我已滿18歲'按鈕
         self.session.post("https://www.ptt.cc/ask/over18",
                           verify=False,
                           data=self.over18_payload)
@@ -27,7 +29,8 @@ class ptt_scraper():
     def scraper(self, board="Gossiping", start=38900, end=38900, sleep_time = 0.5):
         page_count = start
         filename = board + str(start) + "-" + str(end)
-
+        
+        # 開檔並寫入json第一個符號
         self._output(filename, 'w', '[')
         for page in self._pages(board, int(start), int(end)):
             
@@ -44,17 +47,23 @@ class ptt_scraper():
             
             page_count += 1
         
+        # 移動檔案游標並且刪掉
         with open(filename + ".json", mode= 'rb+') as op:
             op.seek(-1, 2)
             op.truncate()
         
         self._output(filename, 'a', ']')
             
-
+    '''
+    爬取每個主page
+    '''
     def _pages(self, board, start, end):
         for page_range in range(start, end + 1):
             yield self.main_url + board + "/index" + str(page_range) + ".html"
     
+    '''
+    爬取每篇文章
+    '''
     def _articles(self, page):
         soup = BeautifulSoup(self._get_html(page), "lxml")
         divs = soup.find_all('div', 'r-ent')
@@ -63,7 +72,10 @@ class ptt_scraper():
                 # 文章標題
                 # print(div.find('a').string)
                 yield div.find('a')['href']
-    
+
+    '''
+    分析每篇文章
+    '''
     def _parse_article(self, url):
         soup = BeautifulSoup(self._get_html(
             self.root_url + url), 'html.parser')
@@ -74,7 +86,7 @@ class ptt_scraper():
             article["Author"] = soup.select(".article-meta-value")[0].contents[0].split(" ")[0]
             article["Title"] = re.sub('　', ' ', soup.select(".article-meta-value")[2].contents[0])
             
-            # 取得內文
+            # 取得內文並且去除掉部分可能造成錯誤的內容
             content = ""
             main_content = soup.select("#main-content")[0]
             for meta in main_content.select('div.article-metaline'):
@@ -103,8 +115,9 @@ class ptt_scraper():
             for i in range(len(filtered)):
                 filtered[i] = re.sub(expr, '', filtered[i])
 
-            filtered = [_f for _f in filtered if _f]  # remove empty strings
-            # remove last line containing the url of the article
+            # 刪除空字串
+            filtered = [_f for _f in filtered if _f]
+            # 刪掉最後一行有網址的文字
             filtered = [x for x in filtered if url not in x]
             filtered = [x for x in filtered if "http" not in x]
             content = ' '.join(filtered)
@@ -167,7 +180,7 @@ if __name__ == "__main__":
     start = 38900
     end = 38900
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description='''
-            A crawler for the web version of ptt.cc.
+            A crawler for the web version of ptt.cc
             Input: board name and page indices
             Output: BOARD_NAME-START_INDEX-END_INDEX.json
         ''')
