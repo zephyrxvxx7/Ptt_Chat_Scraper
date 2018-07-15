@@ -138,7 +138,6 @@ class ptt_scraper():
                     response_dic = {}
                     response_dic["Content"] = response_struct.select(
                         ".push-content")[0].contents[0][1:]
-                    print(response_dic['Content'])
                     response_dic["Vote"] = response_struct.select(
                         ".push-tag")[0].contents[0][0]
                     response_dic["User"] = response_struct.select(
@@ -191,7 +190,8 @@ if __name__ == "__main__":
     parser.add_argument('-t', metavar='DELAY_TIME',
                         type=float, help="Delay of time(sec.)", default=0.5)
     args = parser.parse_args()
-    ptt = ptt_scraper()
-    ptt.scraper(board=args.b, start=args.i[0], end=args.i[-1], sleep_time=args.t)
+
+    scraper = ptt_scraper()
+    scraper.scraper(board=args.b, start=args.i[0], end=args.i[-1], sleep_time=args.t)
     print('Mission completed!')
     
